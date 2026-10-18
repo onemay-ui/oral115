@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>115 統測英文口說朗讀大挑戰 🌟</title>
+  <!-- CDN 依賴 -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Nunito', 'Noto Sans TC', sans-serif; background-color: #f0fdf4; }
+    .pulse-ring { animation: pulse 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+    @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4">
+  <div id="root" class="w-full max-w-md"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // 115 學年度統測英文對話題真題 (11-20 題)
+    const SPEAKING_DATA = [
+      {
+        id: 11,
+        title: "第 11 題：商店購物",
+        scenario: "顧客在商店購買手機充電器與結帳時的對話。",
+        speakers: { A: "Customer", B: "Clerk" },
+        dialogue: [
+          { speaker: "A", text: "Hi, do you sell phone chargers?" },
+          { speaker: "B", text: "Yes, over there. Take a look, please." },
+          { speaker: "A", text: "Great, I'll take this one. How much is it?" },
+          { speaker: "B", text: "That'll be NT$350." }
+        ],
+        targetSentence: "Anything else?",
+        translation: {
+          dialogue: ["你好，你們有賣手機充電器嗎？", "有的，就在那邊。請看一下。", "太好了，我要買這一個。多少錢？", "總共是 350 元。"],
+          targetSentence: "還需要別的嗎？"
+        }
+      },
+      {
+        id: 12,
+        title: "第 12 題：演唱會話題",
+        scenario: "Jane 與 Tom 討論近期熱門的演唱會。",
+        speakers: { A: "Jane", B: "Tom" },
+        dialogue: [
+          { speaker: "A", text: "Did you go to the BLACKPINK concert?" },
+          { speaker: "B", text: "Nope. I was busy preparing for a singing competition." },
+          { speaker: "A", text: "Oh! And did you go to the TWICE concert?" }
+        ],
+        targetSentence: "I went with my classmates.",
+        translation: {
+          dialogue: ["你有去 BLACKPINK 的演唱會嗎？", "沒有。我忙著準備歌唱比賽。", "喔！那你有去 TWICE 的演唱會嗎？"],
+          targetSentence: "我跟同學一起去了。"
+        }
+      },
+      {
+        id: 13,
+        title: "第 13 題：過年採買橘子",
+        scenario: "Liz 準備去超市幫媽媽拿過年訂購的柑橘。",
+        speakers: { A: "Liz", B: "Jay" },
+        dialogue: [
+          { speaker: "A", text: "I'm going to the supermarket to pick up two boxes of mandarin oranges. My mother ordered them for Chinese New Year." }
+        ],
+        targetSentence: "Why mandarin oranges?",
+        translation: {
+          dialogue: ["我要去超市拿兩箱橘子。我媽為了過年訂的。"],
+          targetSentence: "為什麼是橘子？"
+        }
+      },
+      {
+        id: 14,
+        title: "第 14 題：學習新語言",
+        scenario: "Brian 與 Lily 討論 30 歲開始學習西班牙語的心得。",
+        speakers: { A: "Brian", B: "Lily" },
+        dialogue: [
+          { speaker: "A", text: "I heard you're learning Spanish. Is it hard?" },
+          { speaker: "B", text: "Yes, it is, but I like it." },
+          { speaker: "A", text: "You're already 30." }
+        ],
+        targetSentence: "Isn't it too late to learn a new language?",
+        translation: {
+          dialogue: ["我聽說你在學西班牙文。很難嗎？", "是很難，但我很喜歡。", "你都 30 歲了。"],
+          targetSentence: "現在學新語言難道不會太晚嗎？"
+        }
+      },
+      {
+        id: 15,
+        title: "第 15 題：曝曬後的瓶裝水",
+        scenario: "Peter 把瓶裝水留在腳踏車上曝曬了一整個下午。",
+        speakers: { A: "Peter", B: "Rose" },
+        dialogue: [
+          { speaker: "A", text: "Gosh. I left my bottled water on my bike." },
+          { speaker: "B", text: "For the whole afternoon? Then don't drink it. It's hot outside. The sun may have heated it up." }
+        ],
+        targetSentence: "What's wrong with that?",
+        translation: {
+          dialogue: ["天哪。我把瓶裝水忘在腳踏車上了。", "忘了一整個下午嗎？那別喝了。外面很熱，太陽可能把它加熱了。"],
+          targetSentence: "那有什麼問題嗎？"
+        }
+      },
+      {
+        id: 16,
+        title: "第 16 題：接送與晚餐安排",
+        scenario: "吳先生與吳太太討論接小孩與晚餐外食安排。",
+        speakers: { A: "Mrs. Wu", B: "Mr. Wu" },
+        dialogue: [
+          { speaker: "A", text: "I'm going shopping. Would you mind picking up Jimmy at the sports center?" },
+          { speaker: "B", text: "I'd like to, but I'll have an online meeting soon." },
+          { speaker: "A", text: "We're out of food for dinner. There's nothing left in the fridge." }
+        ],
+        targetSentence: "Then we can eat out tonight.",
+        translation: {
+          dialogue: ["我要去購物。你介意去運動中心接 Jimmy 嗎？", "我想去，但我等一下有線上會議。", "我們沒東西煮晚餐了。冰箱裡什麼都不剩。"],
+          targetSentence: "那我們今晚去外面吃吧。"
+        }
+      },
+      {
+        id: 17,
+        title: "第 17 題：技能競賽",
+        scenario: "阿明與阿梅聊到台北舉辦的亞洲技能競賽獲得的佳績。",
+        speakers: { A: "Ming", B: "A-Mei" },
+        dialogue: [
+          { speaker: "A", text: "Did you know the skills contest in Taipei last year?" },
+          { speaker: "B", text: "The Asian Skills Competition at Nangang Exhibition Center?" },
+          { speaker: "A", text: "Yes. I was there. It was very impressive. The Taiwan team did a good job!" }
+        ],
+        targetSentence: "Did we get any gold medals?",
+        translation: {
+          dialogue: ["你知道去年在台北舉行的技能競賽嗎？", "在南港展覽館舉辦的亞洲技能競賽嗎？", "對。我當時在場。非常令人印象深刻。台灣隊表現得很棒！"],
+          targetSentence: "我們有拿到金牌嗎？"
+        }
+      },
+      {
+        id: 18,
+        title: "第 18 題：履歷寫作建議",
+        scenario: "Ann 請教 Ben 撰寫履歷時工作經驗的排版順序。",
+        speakers: { A: "Ann", B: "Ben" },
+        dialogue: [
+          { speaker: "A", text: "Hey, I'm writing my resume. What should I put first?" },
+          { speaker: "B", text: "You can list your education first." },
+          { speaker: "A", text: "What's next?" }
+        ],
+        targetSentence: "My work experience?",
+        translation: {
+          dialogue: ["嘿，我在寫履歷。我應該先放什麼？", "你可以先列出你的學歷。", "接下來呢？"],
+          targetSentence: "我的工作經驗嗎？"
+        }
+      },
+      {
+        id: 19,
+        title: "第 19 題：高齡換發駕照",
+        scenario: "Dave 提醒阿嬤現在新規定高齡駕駛換照的年齡。",
+        speakers: { A: "Dave", B: "Grandma" },
+        dialogue: [
+          { speaker: "A", text: "Grandma, you need to renew your driver's license if you want to keep driving." },
+          { speaker: "B", text: "But I'm just 71. I thought only people over 75 had to do it." },
+          { speaker: "A", text: "Not anymore. The new rules say people have to renew their licenses at 70 now." },
+          { speaker: "B", text: "That won't be a problem. I'm very healthy." }
+        ],
+        targetSentence: "I'm sure I can get my license renewed.",
+        translation: {
+          dialogue: ["阿嬤，如果你想繼續開車，你需要去換發駕照。", "但我才 71 歲。我以為 75 歲以上的人才需要換。", "現在不一樣了。新規定說現在 70 歲就要換駕照了。", "那沒問題。我很健康。"],
+          targetSentence: "我相信我能成功換到駕照。"
+        }
+      },
+      {
+        id: 20,
+        title: "第 20 題：珍古德博士",
+        scenario: "Willy 與 Joan 緬懷研究黑猩猩的珍古德博士。",
+        speakers: { A: "Willy", B: "Joan" },
+        dialogue: [
+          { speaker: "A", text: "Did you hear that Dr. Jane Goodall passed away last year?" },
+          { speaker: "B", text: "It's so sad. She spent her whole life studying chimpanzees in Africa." },
+          { speaker: "A", text: "Yes." }
+        ],
+        targetSentence: "She really helped people understand these animals.",
+        translation: {
+          dialogue: ["你聽說珍古德博士過世了嗎？", "真令人難過。她一生致力於在非洲研究黑猩猩。", "是的。"],
+          targetSentence: "她真的幫助人們理解這些動物。"
+        }
+      }
+    ];
+
+    // 相似度算法與鼓勵邏輯
+    function calculateScore(target, spoken) {
+      if (!spoken || spoken.trim() === "") return { stars: 1, ratio: 0, encourage: "太有勇氣了！跨出開口的第一步最厲害！🌟" };
+      
+      const clean = str => str.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
+      const targetWords = clean(target).split(/\s+/);
+      const spokenWords = clean(spoken).split(/\s+/);
+      
+      let matchedCount = 0;
+      targetWords.forEach(w => {
+        if (spokenWords.includes(w)) matchedCount++;
+      });
+      
+      const ratio = matchedCount / targetWords.length;
+      
+      if (ratio >= 0.7) {
+        return { stars: 3, ratio, encourage: "太棒了！發音清晰又流利，簡直是統測英語達人！👏" };
+      } else if (ratio >= 0.3) {
+        return { stars: 2, ratio, encourage: "很讚喔！大聲說出來就贏了一半，繼續保持！💪" };
+      } else {
+        return { stars: 1, ratio, encourage: "太有勇氣了！嘗試開口就很棒，再試一次會更順手！🌟" };
+      }
+    }
+
+    function App() {
+      const [stage, setStage] = useState('welcome');
+      const [seatNumber, setSeatNumber] = useState('');
+      const [studentName, setStudentName] = useState('');
+      const [currentIndex, setCurrentIndex] = useState(0);
+      const [showTranslation, setShowTranslation] = useState(false);
+      const [isRecording, setIsRecording] = useState(false);
+      const [transcript, setTranscript] = useState('');
+      const [questionResults, setQuestionResults] = useState([]);
+      const [currentEval, setCurrentEval] = useState(null);
+
+      const currentQ = SPEAKING_DATA[currentIndex];
+      const recognitionRef = useRef(null);
+
+      useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          const rec = new SpeechRecognition();
+          rec.continuous = false;
+          rec.interimResults = true;
+          rec.lang = 'en-US';
+
+          rec.onresult = (event) => {
+            let currentText = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              currentText += event.results[i][0].transcript;
+            }
+            setTranscript(currentText);
+          };
+
+          rec.onend = () => {
+            setIsRecording(false);
+          };
+
+          recognitionRef.current = rec;
+        }
+      }, []);
+
+      const speak = (text) => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = 'en-US';
+          u.rate = 0.85;
+          window.speechSynthesis.speak(u);
+        }
+      };
+
+      const startListening = () => {
+        if (!recognitionRef.current) {
+          alert("您的瀏覽器不支援語音辨識，請使用 Chrome 或 Edge 瀏覽器！");
+          return;
+        }
+        setTranscript('');
+        setCurrentEval(null);
+        setIsRecording(true);
+        recognitionRef.current.start();
+      };
+
+      const stopListening = () => {
+        if (recognitionRef.current && isRecording) {
+          recognitionRef.current.stop();
+        }
+      };
+
+      useEffect(() => {
+        if (!isRecording && transcript !== '') {
+          const evalResult = calculateScore(currentQ.targetSentence, transcript);
+          setCurrentEval(evalResult);
+        }
+      }, [isRecording]);
+
+      const handleStartChallenge = () => {
+        if (!seatNumber.trim() || !studentName.trim()) {
+          alert("請輸入座號與姓名後再開始挑戰喔！");
+          return;
+        }
+        setStage('playing');
+      };
+
+      const handleConfirmAnswer = () => {
+        const resultItem = {
+          qId: currentQ.id,
+          targetSentence: currentQ.targetSentence,
+          spokenText: transcript || "(未錄製到聲音)",
+          stars: currentEval ? currentEval.stars : 1,
+          encourage: currentEval ? currentEval.encourage : "勇氣可嘉！"
+        };
+
+        const updatedResults = [...questionResults];
+        updatedResults[currentIndex] = resultItem;
+        setQuestionResults(updatedResults);
+
+        if (currentIndex + 1 < SPEAKING_DATA.length) {
+          setCurrentIndex(currentIndex + 1);
+          setTranscript('');
+          setCurrentEval(null);
+          setShowTranslation(false);
+        } else {
+          setStage('result');
+        }
+      };
+
+      const restartChallenge = () => {
+        setCurrentIndex(0);
+        setQuestionResults([]);
+        setTranscript('');
+        setCurrentEval(null);
+        setShowTranslation(false);
+        setStage('playing');
+      };
+
+      const totalStars = questionResults.reduce((acc, curr) => acc + (curr ? curr.stars : 0), 0) + (currentEval ? currentEval.stars : 0);
+
+      return (
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border-4 border-emerald-400 min-h-[620px] flex flex-col justify-between p-5">
+          
+          {/* 1. 歡迎頁面（包含座號與姓名輸入） */}
+          {stage === 'welcome' && (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-2">
+              <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mb-3 shadow-inner">
+                <i className="fa-solid fa-microphone-lines"></i>
+              </div>
+              <h1 className="text-xl font-black text-gray-800 mb-1">115 統測英文科 🎯</h1>
+              <h2 className="text-lg font-bold text-emerald-600 mb-3">對話題口說朗讀大挑戰</h2>
+              
+              {/* 學生個人資訊輸入框 */}
+              <div className="w-full bg-emerald-50 rounded-2xl p-4 mb-4 border border-emerald-200 text-left">
+                <div className="text-xs font-extrabold text-emerald-800 mb-2 flex items-center gap-1">
+                  <i className="fa-solid fa-user-pen"></i> 請輸入學生資訊：
+                </div>
+                <div className="flex gap-2">
+                  <div className="w-1/3">
+                    <label className="text-[11px] font-bold text-emerald-700 mb-1 block">座號</label>
+                    <input 
+                      type="text" 
+                      placeholder="例：05" 
+                      value={seatNumber}
+                      onChange={(e) => setSeatNumber(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div className="w-2/3">
+                    <label className="text-[11px] font-bold text-emerald-700 mb-1 block">姓名</label>
+                    <input 
+                      type="text" 
+                      placeholder="例：王小明" 
+                      value={studentName}
+                      onChange={(e) => setStudentName(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 rounded-2xl p-3 text-left w-full mb-5 border border-amber-200">
+                <div className="font-bold text-amber-800 mb-1 text-xs">🌟 星星評分機制：</div>
+                <div className="text-[11px] text-amber-700 space-y-0.5">
+                  <div>⭐⭐⭐ 滿分：發音清晰且完整朗讀！</div>
+                  <div>⭐⭐ 兩星：大聲讀出大部分關鍵字！</div>
+                  <div>⭐ 一星：只要勇敢開口嘗試就能獲得！</div>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleStartChallenge}
+                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-2xl shadow-lg transition transform active:scale-95 text-base"
+              >
+                開始 115 統測朗讀挑戰 🚀
+              </button>
+            </div>
+          )}
+
+          {/* 2. 朗讀挑戰進行頁面 */}
+          {stage === 'playing' && (
+            <div className="flex-1 flex flex-col justify-between">
+              {/* 頂部資訊、進度條與星星顯示 */}
+              <div>
+                <div className="flex justify-between items-center mb-1 text-xs font-bold text-gray-600">
+                  <span className="text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-md">
+                    👤 {seatNumber} 號 {studentName}
+                  </span>
+                  <span className="text-amber-500 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
+                    <i className="fa-solid fa-star"></i> 累積 {totalStars} 星
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[11px] font-bold text-slate-500">
+                    第 {currentIndex + 1} / {SPEAKING_DATA.length} 題（統測第 {currentQ.id} 題）
+                  </span>
+                </div>
+                <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden mb-3">
+                  <div 
+                    className="bg-emerald-500 h-full transition-all duration-300"
+                    style={{ width: `${((currentIndex + 1) / SPEAKING_DATA.length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* 情境說明卡片 */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-2.5">
+                <div className="text-xs font-bold text-slate-500 mb-0.5">
+                  <i className="fa-solid fa-compass mr-1"></i> {currentQ.title}
+                </div>
+                <div className="text-xs text-slate-700 font-medium">{currentQ.scenario}</div>
+              </div>
+
+              {/* 對話展示區 */}
+              <div className="space-y-2 mb-3">
+                {currentQ.dialogue.map((d, i) => (
+                  <div key={i} className="bg-emerald-50 border border-emerald-100 rounded-xl p-2.5">
+                    <div className="flex justify-between items-center mb-0.5">
+                      <span className="text-xs font-extrabold text-emerald-700">{currentQ.speakers[d.speaker]}</span>
+                      <button 
+                        onClick={() => speak(d.text)}
+                        className="text-emerald-600 hover:text-emerald-800 text-[11px] px-2 py-0.5 bg-white rounded shadow-sm border border-emerald-200"
+                      >
+                        <i className="fa-solid fa-volume-high mr-1"></i>示範
+                      </button>
+                    </div>
+                    <div className="text-xs font-semibold text-gray-800">{d.text}</div>
+                    {showTranslation && (
+                      <div className="text-[11px] text-gray-500 mt-1 border-t border-emerald-100 pt-0.5">
+                        {currentQ.translation.dialogue[i]}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* 學生要朗讀的目標答案 */}
+                <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 shadow-sm">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[11px] font-black text-amber-800 bg-amber-200 px-2 py-0.5 rounded">
+                      🎯 請朗讀正確答案
+                    </span>
+                    <button 
+                      onClick={() => speak(currentQ.targetSentence)}
+                      className="text-amber-700 hover:text-amber-900 text-xs font-bold px-2 py-0.5 bg-amber-200 rounded shadow-sm"
+                    >
+                      <i className="fa-solid fa-volume-high mr-1"></i>先聽發音
+                    </button>
+                  </div>
+                  <div className="text-sm font-extrabold text-gray-900 my-1">
+                    "{currentQ.targetSentence}"
+                  </div>
+                  {showTranslation && (
+                    <div className="text-xs font-medium text-amber-800 border-t border-amber-200/60 pt-1">
+                      {currentQ.translation.targetSentence}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 切換翻譯 */}
+              <div className="flex justify-between items-center mb-3 text-xs">
+                <button 
+                  onClick={() => setShowTranslation(!showTranslation)}
+                  className="text-slate-600 hover:text-slate-800 font-bold flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-lg"
+                >
+                  <i className="fa-solid fa-language"></i> {showTranslation ? '隱藏對照翻譯' : '顯示對照翻譯'}
+                </button>
+                <div className="text-slate-400 text-[11px]">
+                  點擊下方麥克風開口
+                </div>
+              </div>
+
+              {/* 錄音與辨識區 */}
+              <div className="bg-gray-50 rounded-2xl p-3 border border-gray-200 text-center mb-2.5">
+                <div className="text-xs text-gray-500 mb-2">
+                  {isRecording ? "正在聆聽中...請大聲唸出答案" : "點擊麥克風開始朗讀"}
+                </div>
+
+                <div className="flex justify-center mb-2">
+                  {!isRecording ? (
+                    <button 
+                      onClick={startListening}
+                      className="w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center text-xl shadow-lg transition transform active:scale-90"
+                    >
+                      <i className="fa-solid fa-microphone"></i>
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={stopListening}
+                      className="w-14 h-14 bg-red-500 text-white rounded-full flex items-center justify-center text-xl shadow-lg pulse-ring"
+                    >
+                      <i className="fa-solid fa-square"></i>
+                    </button>
+                  )}
+                </div>
+
+                <div className="min-h-[36px] bg-white rounded-lg p-1.5 border border-gray-200 text-xs text-gray-700 italic flex items-center justify-center">
+                  {transcript || <span className="text-gray-400 not-italic">(錄音結果會顯示在這裡)</span>}
+                </div>
+              </div>
+
+              {/* 評分與鼓勵卡片 */}
+              {currentEval && (
+                <div className="bg-emerald-100 border-2 border-emerald-400 rounded-xl p-3 text-center mb-2">
+                  <div className="text-amber-500 text-xl mb-0.5 space-x-1">
+                    {[...Array(currentEval.stars)].map((_, i) => (
+                      <i key={i} className="fa-solid fa-star"></i>
+                    ))}
+                    {[...Array(3 - currentEval.stars)].map((_, i) => (
+                      <i key={i} className="fa-regular fa-star text-gray-300"></i>
+                    ))}
+                  </div>
+                  <div className="font-extrabold text-emerald-900 text-xs mb-2">
+                    {currentEval.encourage}
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={startListening}
+                      className="flex-1 py-1.5 bg-white text-emerald-700 font-bold rounded-lg border border-emerald-300 text-xs shadow-sm"
+                    >
+                      <i className="fa-solid fa-rotate-right mr-1"></i>再試一次
+                    </button>
+                    <button 
+                      onClick={handleConfirmAnswer}
+                      className="flex-1 py-1.5 bg-emerald-600 text-white font-bold rounded-lg text-xs shadow-md"
+                    >
+                      下一題 <i className="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!currentEval && (
+                <button 
+                  disabled
+                  className="w-full py-2.5 bg-gray-200 text-gray-400 font-bold rounded-xl text-xs cursor-not-allowed"
+                >
+                  請先朗讀並完成錄音 🎙️
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* 3. 結果結算頁面（顯示學生姓名與成績卡） */}
+          {stage === 'result' && (
+            <div className="flex-1 flex flex-col justify-between py-1">
+              <div className="text-center">
+                <div className="inline-block bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full px-4 py-1 text-xs font-black mb-2">
+                  🎓 學生：{seatNumber} 號 {studentName}
+                </div>
+                <h2 className="text-xl font-black text-gray-800 mb-1">115 統測朗讀總成績</h2>
+                <div className="text-3xl font-black text-amber-500 my-1 flex items-center justify-center gap-2">
+                  <i className="fa-solid fa-star"></i>
+                  <span>{questionResults.reduce((a, b) => a + b.stars, 0)} / {SPEAKING_DATA.length * 3}</span>
+                </div>
+                <p className="text-xs font-bold text-emerald-700 bg-emerald-50 rounded-xl p-2.5 mb-3 border border-emerald-200">
+                  {questionResults.reduce((a, b) => a + b.stars, 0) >= 22 
+                    ? "🏆 統測口說大師！發音與勇氣兼具，115 統測英文難不倒你！" 
+                    : "🌟 勇敢挑戰者！成功完成所有對話朗讀，繼續保持這份熱情！"}
+                </p>
+              </div>
+
+              {/* 答題歷程 */}
+              <div className="space-y-2 overflow-y-auto max-h-[220px] pr-1 mb-3">
+                <div className="text-xs font-bold text-gray-500 mb-1">📋 個人朗讀成績單：</div>
+                {questionResults.map((r, idx) => (
+                  <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-left">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-bold text-gray-700">第 {r.qId} 題</span>
+                      <span className="text-amber-500 text-xs font-black">
+                        {[...Array(r.stars)].map((_, i) => <i key={i} className="fa-solid fa-star"></i>)}
+                      </span>
+                    </div>
+                    <div className="text-xs font-bold text-emerald-800 mb-0.5">答案："{r.targetSentence}"</div>
+                    <div className="text-[11px] text-gray-500 italic">錄音："{r.spokenText}"</div>
+                  </div>
+                ))}
+              </div>
+
+              <button 
+                onClick={restartChallenge}
+                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-2xl shadow-lg transition transform active:scale-95 text-sm"
+              >
+                再挑戰一次 🔄
+              </button>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
